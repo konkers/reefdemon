@@ -4,7 +4,7 @@ FOSC=16000000
 CROSS_CPU=atmega328
 FOSCCFLAG=-DFOSC=${FOSC}
 
-OBJS=main.o twi_master.o
+OBJS=main.o twi_master.o lcd.o font_pc8x8.o
 TARGETS=reefdevil.bin
 all: ${TARGETS}
 

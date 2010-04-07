@@ -1,5 +1,6 @@
 /*
  * Copyright 2010 Erik Gilling
+ * Portions copyright 2007 James P Lynch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +15,19 @@
  * limitations under the License.
  */
 
-#ifndef __pins_h__
-#define __pins_h__
+#ifndef __lcd_h__
+#define __lcd_h__
 
-#define B_DQ		PB0
-#define B_DAY_PWM	PB1
-#define B_ACTINIC_PWM	PB2
-#define B_IN0		PB3
-#define B_IN1		PB4
-#define B_JOY_SEL	PB5
-/* XTAL			PB6 */
-/* XTAL			PB7 */
+#include "font.h"
 
-#define C_JOY_VERT	PC0
-#define C_JOY_HORIZ	PC1
-#define C_BUZZER	PC2
-/* unused		PC3 */
-#define C_SDA		PC4
-#define C_SCL		PC5
-#define C_PH		PC6
-/* unused		PC7 */
+void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
+int lcd_print_char(uint8_t x, uint8_t y, char c,
+		   struct font *font, uint16_t fg_color,
+		   uint16_t bg_color);
+int lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
+		       struct font *font, uint16_t fg_color,
+		       uint16_t bg_color);
+void lcd_init(void);
 
-#define D_RXD		PD0
-#define D_TXD		PD1
-#define D_LCD_BL	PD2
-#define D_LCD_SEL	PD3
-#define D_LCD_SCK	PD4
-#define D_LCD_MOSI	PD5
-#define D_LCD_RESET	PD6
-#define D_ALERT		PD7
+#endif /* __lcd_h__ */
 
-#endif /* __pins_h__ */

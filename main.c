@@ -17,6 +17,7 @@
 #include <avr/interrupt.h>
 
 #include "twi_master.h"
+#include "lcd.h"
 
 #include "pins.h"
 
@@ -66,7 +67,8 @@ int main(void)
 
 	DDRC = _BV(C_SCL);
 
-	DDRD = _BV(D_ALERT);
+	DDRD = _BV(D_LCD_BL) | _BV(D_LCD_SEL) | _BV(D_LCD_SCK) |
+		_BV(D_LCD_MOSI) | _BV(D_LCD_RESET) | _BV(D_ALERT);
 
 #if (FOSC == 18432000UL)
 	/*
@@ -100,6 +102,14 @@ int main(void)
 
 	sei();
 
+	lcd_init();
+	lcd_fill(0, 0, 131, 131, 0x000);
+	lcd_fill(10, 10, 50, 50, 0x00f);
+	lcd_fill(60, 10, 50, 50, 0x0f0);
+	lcd_fill(10, 60, 50, 50, 0xf00);
+	lcd_fill(60, 60, 50, 50, 0xfff);
+	lcd_print_string_P(10, 110, PSTR("konkers"), 
+			   &font_pc8x8, 0x000, 0xfff);
 	while (1) {
 	}
 
