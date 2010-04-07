@@ -18,6 +18,7 @@
 
 #include "twi_master.h"
 #include "lcd.h"
+#include "ow.h"
 
 #include "pins.h"
 
@@ -104,13 +105,54 @@ int main(void)
 
 	lcd_init();
 	lcd_fill(0, 0, 131, 131, 0x000);
-	lcd_fill(10, 10, 50, 50, 0x00f);
-	lcd_fill(60, 10, 50, 50, 0x0f0);
-	lcd_fill(10, 60, 50, 50, 0xf00);
-	lcd_fill(60, 60, 50, 50, 0xfff);
 	lcd_print_string_P(10, 110, PSTR("konkers"), 
 			   &font_pc8x8, 0x000, 0xfff);
+
+	ow_init();
+
 	while (1) {
+		uint8_t i, j, w, n_addrs;
+		uint8_t data[9];
+
+		n_addrs = ow_enumerate();
+
+		ow_reset();
+
+		ow_skip_rom();
+
+		ow_write_byte(0x44);
+
+		while (!ow_read()) {
+		}
+
+		for (i = 0; i < n_addrs; i++ ) {
+			ow_reset();
+
+			ow_match_rom(i);
+
+			ow_write_byte(0xBE);
+
+			for (j = 0; j < 9; j++)
+				data[j] = ow_read_byte();
+
+			for (j = 0; j < 8; j++ ) {
+				if ((j & 0x3) == 0)
+					w = 0;
+
+				w += lcd_print_hex(10 + w,
+						   10 + 10 * (i * 3 + (j >> 2)),
+						   ow_addr(i)[j],
+						   &font_pc8x8,
+						   0xfff, 0x000);
+				w++;
+			}
+
+			lcd_print_temp(80, 10 + 10 * (i * 3),
+				       data[0] | (data[1] << 8),
+				       &font_pc8x8,
+				       0xfff, 0x000);
+		}
+
 	}
 
 }
