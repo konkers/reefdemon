@@ -1,6 +1,5 @@
 /*
  * Copyright 2010 Erik Gilling
- * Portions copyright 2007 James P Lynch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,7 +203,7 @@ void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color)
 	}
 }
 
-int lcd_print_char(uint8_t x, uint8_t y, char c,
+uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		   struct font *font, uint16_t fg_color,
 		   uint16_t bg_color)
 {
@@ -243,23 +242,111 @@ int lcd_print_char(uint8_t x, uint8_t y, char c,
 
 	}
 
-	return glyph.w;
+	lcd_fill(x + glyph.w, y, 1, font->h, ~bg_color);
+	return glyph.w + 1;
 }
 
-int lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
+uint8_t lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
 		       struct font *font, uint16_t fg_color,
 		       uint16_t bg_color)
 {
 	char c;
-	int w = 0;
+	uint8_t w = 0;
 	while ((c = pgm_read_byte(str++))) {
 		w += lcd_print_char(x + w, y, c, font, fg_color, bg_color);
-		lcd_fill(x + w, y, 1, font->h, bg_color);
-		w++;
 	}
 	return w;
 }
 
+static prog_uint8_t digits[] = {'0', '1', '2', '3',
+				'4', '5', '6', '7',
+				'8', '9', 'A', 'B',
+				'C', 'D', 'E', 'F'};
+
+
+uint8_t lcd_print_hex(uint8_t x, uint8_t y, uint8_t data,
+		  struct font *font, uint16_t fg_color,
+		  uint16_t bg_color)
+{
+	char c;
+	uint8_t w = 0;
+
+	c = pgm_read_byte(digits + (data >> 4));
+	w += lcd_print_char(x + w, y, c, font, fg_color, bg_color);
+	c = pgm_read_byte(digits + (data & 0xf));
+	w += lcd_print_char(x + w, y, c, font, fg_color, bg_color);
+
+	return w;
+}
+
+uint8_t lcd_print_dec(uint8_t x, uint8_t y, uint8_t data,
+		  struct font *font, uint16_t fg_color,
+		  uint16_t bg_color)
+{
+	uint8_t w = 0;
+	char buf[3];
+	int8_t i = 2;
+
+	if (data == 0)
+		return lcd_print_char(x + w, y, '0',
+				      font, fg_color, bg_color);
+
+	while (data) {
+		buf[i] = pgm_read_byte(digits + (data % 10));
+		i--;
+		data /= 10;
+	}
+
+	for (i++; i < 3; i++) {
+		w += lcd_print_char(x + w, y, buf[i], font, fg_color, bg_color);
+	}
+	return w;
+}
+
+
+static prog_char fract[] = {
+	'0', '0', '0', '0',
+	'0', '6', '2', '5',
+	'1', '2', '5', '0',
+	'1', '8', '7', '5',
+	'2', '5', '0', '0',
+	'3', '1', '2', '5',
+	'3', '7', '5', '0',
+	'4', '3', '7', '5',
+	'5', '0', '0', '0',
+	'5', '6', '2', '5',
+	'6', '2', '5', '0',
+	'6', '8', '7', '5',
+	'7', '5', '0', '0',
+	'8', '1', '2', '5',
+	'8', '7', '5', '0',
+	'9', '3', '7', '5',
+};
+
+uint8_t lcd_print_temp(uint8_t x, uint8_t y, uint16_t temp,
+		       struct font *font, uint16_t fg_color,
+		       uint16_t bg_color)
+{
+	int8_t n;
+	uint8_t w = 0;
+
+	n = temp >> 4;
+
+	if (n < 0) {
+		w += lcd_print_char(x + w, y, '-', font, fg_color, bg_color);
+		n = -n;
+	}
+	w += lcd_print_dec(x, y, n, font, fg_color, bg_color);
+	w += lcd_print_char(x + w, y, '.', font, fg_color, bg_color);
+
+	for (n = 0; n < 4; n++) {
+		char c;
+		c = pgm_read_byte(fract + (temp & 0xf) * 4 + n);
+
+		w += lcd_print_char(x + w, y, c, font, fg_color, bg_color);
+	}
+	return w;
+}
 
 void lcd_init(void)
 {

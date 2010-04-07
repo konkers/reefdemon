@@ -1,6 +1,5 @@
 /*
  * Copyright 2010 Erik Gilling
- * Portions copyright 2007 James P Lynch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +20,21 @@
 #include "font.h"
 
 void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
-int lcd_print_char(uint8_t x, uint8_t y, char c,
-		   struct font *font, uint16_t fg_color,
-		   uint16_t bg_color);
-int lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
+uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		       struct font *font, uint16_t fg_color,
 		       uint16_t bg_color);
+uint8_t lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
+			   struct font *font, uint16_t fg_color,
+			   uint16_t bg_color);
+uint8_t lcd_print_hex(uint8_t x, uint8_t y, uint8_t data,
+		      struct font *font, uint16_t fg_color,
+		      uint16_t bg_color);
+uint8_t lcd_print_dec(uint8_t x, uint8_t y, uint8_t data,
+		      struct font *font, uint16_t fg_color,
+		      uint16_t bg_color);
+uint8_t lcd_print_temp(uint8_t x, uint8_t y, uint16_t temp,
+		   struct font *font, uint16_t fg_color,
+		   uint16_t bg_color);
 void lcd_init(void);
 
 #endif /* __lcd_h__ */
