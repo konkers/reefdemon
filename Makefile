@@ -58,7 +58,7 @@ endif
 flash: flash-reefdevil
 
 flash-%: %.bin
-	avrdude -p ${AVRDUDE_CPU} -c fg -e -U flash:w:$< ${FUSES}
+	avrdude -p ${AVRDUDE_CPU} -c usbtiny -B 1 -e -U flash:w:$< ${FUSES}
 
 clean:
 	@rm -f ${OBJS} ${TARGETS} ${TARGETS:.bin=.elf}
