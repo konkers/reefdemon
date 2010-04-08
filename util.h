@@ -27,4 +27,6 @@ static inline void delay(unsigned ticks)
 		__asm__ __volatile__("nop");
 }
 
+#define min(x, y)	((x) < (y)? (x): (y))
+
 #endif /* __util_h__ */
