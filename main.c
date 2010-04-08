@@ -19,10 +19,11 @@
 #include "twi_master.h"
 #include "lcd.h"
 #include "ow.h"
+#include "ds18b20.h"
 
 #include "pins.h"
 
-static uint8_t alert;
+volatile uint8_t alert;
 
 uint8_t ticks;
 
@@ -34,18 +35,13 @@ ISR( TIMER2_COMP_vect )
 {
 	ticks++;
 
+	twi_ping();
+
 
 	if ((ticks & 0x3f) == 0) {
-		if (alert)
-			PORTD |= _BV(D_ALERT);
-		else
-			PORTD &= ~_BV(D_ALERT);
-
 		alert = !alert;
-		twi_send(0x20, alert ? 0xa5 : 0x5a);
 	}
 }
-
 
 static void set_timer2(uint8_t cs, uint8_t oc)
 {
@@ -61,6 +57,40 @@ static void set_timer2(uint8_t cs, uint8_t oc)
 	TIMSK |= _BV(OCIE2);
 #endif
 }
+
+uint8_t new_time[3];
+uint8_t time[3];
+uint8_t time_idx;
+
+void rtc_begin(void)
+{
+	twi_read_reg(0x68, time_idx);
+}
+
+void rtc_end(void)
+{
+	new_time[time_idx] = twi_data;
+
+	time_idx++;
+	if (time_idx > 2) {
+		time[0] = new_time[0];
+		time[1] = new_time[1];
+		time[2] = new_time[2];
+		time_idx = 0;
+	}
+}
+
+uint8_t relays = 0xff;
+
+void relay_begin(void)
+{
+	twi_send(0x20, relays);
+}
+
+void relay_end(void)
+{
+}
+
 
 int main(void)
 {
@@ -100,7 +130,8 @@ int main(void)
 #endif
 
 	twi_master_init();
-
+	twi_add_device(rtc_begin, rtc_end);
+	twi_add_device(relay_begin, relay_end);
 	sei();
 
 	lcd_init();
@@ -109,50 +140,46 @@ int main(void)
 			   &font_pc8x8, 0x000, 0xfff);
 
 	ow_init();
+	ds18b20_init();
 
 	while (1) {
-		uint8_t i, j, w, n_addrs;
-		uint8_t data[9];
+		uint8_t i, n, w;
 
-		n_addrs = ow_enumerate();
+		n = ds18b20_ping();
 
-		ow_reset();
-
-		ow_skip_rom();
-
-		ow_write_byte(0x44);
-
-		while (!ow_read()) {
-		}
-
-		for (i = 0; i < n_addrs; i++ ) {
-			ow_reset();
-
-			ow_match_rom(i);
-
-			ow_write_byte(0xBE);
-
-			for (j = 0; j < 9; j++)
-				data[j] = ow_read_byte();
-
-			for (j = 0; j < 8; j++ ) {
-				if ((j & 0x3) == 0)
-					w = 0;
-
-				w += lcd_print_hex(10 + w,
-						   10 + 10 * (i * 3 + (j >> 2)),
-						   ow_addr(i)[j],
+		if (n) {
+			for (i = 0; i < n; i++ ) {
+				w = lcd_print_temp(10, 10 + 10 * i,
+						   ds18b20_temps[i],
 						   &font_pc8x8,
 						   0xfff, 0x000);
-				w++;
+				lcd_fill(10 + w, 10 + 10 * i,
+					 50 - w, font_pc8x8.h, 0x000);
 			}
-
-			lcd_print_temp(80, 10 + 10 * (i * 3),
-				       data[0] | (data[1] << 8),
-				       &font_pc8x8,
-				       0xfff, 0x000);
 		}
 
+		w = lcd_print_hex(10, 50, time[2],
+				  &font_pc8x8,0xfff, 0x000);
+		w += lcd_print_char(10 + w, 50, ':',
+				    &font_pc8x8,0xfff, 0x000);
+		w += lcd_print_hex(10 + w, 50, time[1],
+				   &font_pc8x8,0xfff, 0x000);
+		w += lcd_print_char(10 + w, 50, ':',
+				    &font_pc8x8,0xfff, 0x000);
+		w += lcd_print_hex(10 + w, 50, time[0],
+				   &font_pc8x8,0xfff, 0x000);
+
+		if (alert)
+			PORTD |= _BV(D_ALERT);
+		else
+			PORTD &= ~_BV(D_ALERT);
+
+		cli();
+		if (ds18b20_temps[1] < (20 << 4))
+			relays &= ~0x1;
+		else if(ds18b20_temps[1] > ((20 << 4) + (1 << 3)))
+			relays |= 0x1;
+		sei();
 	}
 
 }
