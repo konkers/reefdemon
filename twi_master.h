@@ -17,7 +17,12 @@
 #ifndef __twi_master_h__
 #define __twi_master_h__
 
+extern uint8_t twi_data;
+
 void twi_master_init(void);
+void twi_add_device(void (* begin)(void), void (* end)(void));
+void twi_ping(void);
 void twi_send(uint8_t addr, uint8_t data);
+void twi_read_reg(uint8_t addr, uint8_t reg);
 
 #endif /* __twi_master_h__ */
