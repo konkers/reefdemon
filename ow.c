@@ -249,6 +249,8 @@ uint8_t ow_enumerate(void)
 {
 	uint8_t addr = 0;
 
+	memset(ow_addrs, 0x0, sizeof(ow_addrs));
+
 	if (!ow_reset())
 		return 0;
 
