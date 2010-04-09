@@ -203,6 +203,47 @@ void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color)
 	}
 }
 
+void lcd_draw_bitmap4(uint8_t x, uint8_t y, struct bitmap4 *bm)
+{
+	uint16_t colors[4];
+	int i;
+	uint8_t data;
+
+	colors[0] = ~bm->colors[0];
+	colors[1] = ~bm->colors[1];
+	colors[2] = ~bm->colors[2];
+	colors[3] = ~bm->colors[3];
+
+	lcd_set_aperature(x, y, bm->w, bm->h);
+
+	epson_cmd(RAMWR);
+	phillips_cmd(RAMWRP);
+
+	for (i = 0; i < (bm->w * bm->h) / 4; i++) {
+		uint16_t c1, c2;
+
+		data = pgm_read_byte(bm->data + i);
+
+		c1 = colors[data & 0x3];
+		data >>= 2;
+		c2 = colors[data & 0x3];
+		data >>= 2;
+
+		lcd_data((c1 >> 4) & 0xFF);
+		lcd_data(((c1 & 0xF) << 4) | ((c2 >> 8) & 0xF));
+		lcd_data(c2 & 0xFF);
+
+		c1 = colors[data & 0x3];
+		data >>= 2;
+		c2 = colors[data & 0x3];
+		data >>= 2;
+
+		lcd_data((c1 >> 4) & 0xFF);
+		lcd_data(((c1 & 0xF) << 4) | ((c2 >> 8) & 0xF));
+		lcd_data(c2 & 0xFF);
+	}
+}
+
 uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		   struct font *font, uint16_t fg_color,
 		   uint16_t bg_color)
