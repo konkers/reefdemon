@@ -169,15 +169,18 @@ int main(void)
 		w += lcd_print_hex(10 + w, 50, time[0],
 				   &font_pc8x8,0xfff, 0x000);
 
+		lcd_draw_bitmap4(10, 60, &rd_logo);
+
+
 		if (alert)
 			PORTD |= _BV(D_ALERT);
 		else
 			PORTD &= ~_BV(D_ALERT);
 
 		cli();
-		if (ds18b20_temps[1] < (20 << 4))
+		if (ds18b20_temps[1] < (25 << 4))
 			relays &= ~0x1;
-		else if(ds18b20_temps[1] > ((20 << 4) + (1 << 3)))
+		else if(ds18b20_temps[1] > ((25 << 4) + (1 << 3)))
 			relays |= 0x1;
 		sei();
 	}
