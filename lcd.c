@@ -177,13 +177,13 @@ void lcd_set_aperature(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
 	epson_cmd(CASET);
 	phillips_cmd(CASETP);
-	lcd_data(x);
-	lcd_data(x + w - 1);
+	lcd_data(x + 1);
+	lcd_data(x + w);
 
 	epson_cmd(PASET);
 	phillips_cmd(PASETP);
-	lcd_data(y);
-	lcd_data(y + h - 1);
+	lcd_data(y + 1);
+	lcd_data(y + h);
 }
 
 void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color)
