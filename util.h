@@ -29,4 +29,6 @@ static inline void delay(unsigned ticks)
 
 #define min(x, y)	((x) < (y)? (x): (y))
 
+#define ARRAY_SIZE(x)	(sizeof(x)/sizeof(*(x)))
+
 #endif /* __util_h__ */
