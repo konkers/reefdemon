@@ -19,7 +19,7 @@
 
 #define DS18B20_MAX_SENSORS	3
 
-extern int16_t ds18b20_temps[DS18B20_MAX_SENSORS];
+extern int32_t ds18b20_temps[DS18B20_MAX_SENSORS];
 
 uint8_t ds18b20_ping(void);
 void ds18b20_init(void);

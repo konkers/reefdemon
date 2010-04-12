@@ -29,7 +29,7 @@
 #define DS18B20_CMD_RECAL_E2		0xb8
 #define DS18B20_CMD_READ_PS		0xb4
 
-int16_t ds18b20_temps[DS18B20_MAX_SENSORS];
+int32_t ds18b20_temps[DS18B20_MAX_SENSORS];
 
 static void ds18b20_start(void)
 {
@@ -45,6 +45,7 @@ uint8_t ds18b20_ping(void)
 {
 	uint8_t i;
 	uint8_t n = 0;
+	int16_t v;
 
 	if (!ow_read())
 	    return 0;
@@ -54,10 +55,14 @@ uint8_t ds18b20_ping(void)
 			ow_reset();
 			ow_match_rom(i);
 			ow_write_byte(DS18B20_CMD_READ_SCRATCHPAD);
-			ds18b20_temps[n] = ow_read_byte();
-			ds18b20_temps[n] |= ow_read_byte() << 8;
-
-			ds18b20_temps[n] = ds18b20_temps[n];
+			v = ow_read_byte();
+			v |= ow_read_byte() << 8;
+			if (ds18b20_temps[n]) {
+				ds18b20_temps[n] -= ds18b20_temps[n] >> 4;
+				ds18b20_temps[n] += v;
+			} else {
+				ds18b20_temps[n] = v << 4;
+			}
 		}
 
 		n++;
