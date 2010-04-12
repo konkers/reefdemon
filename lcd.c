@@ -84,9 +84,11 @@ static inline void bit(uint8_t d, uint8_t data, uint8_t mask)
 {
 	if (data & mask) {
 		PORTD = d | _BV(D_LCD_MOSI);
+		__asm__ __volatile__("nop");
 		PORTD = d | _BV(D_LCD_SCK) | _BV(D_LCD_MOSI);
 	} else {
 		PORTD = d;
+		__asm__ __volatile__("nop");
 		PORTD = d | _BV(D_LCD_SCK);
 	}
 }
