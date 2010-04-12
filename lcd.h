@@ -23,6 +23,12 @@
 void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
 void lcd_draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
 void lcd_draw_bitmap4(uint8_t x, uint8_t y, struct bitmap4 *bm);
+void lcd_draw_graph(uint8_t x, uint8_t y, uint8_t h,
+		    int32_t *data, uint8_t len, uint8_t idx,
+		    int32_t scale_low, int32_t scale_high,
+		    int32_t set_point,
+		    uint16_t fg_color, uint16_t bg_color,
+		    uint16_t sp_fg_color, uint16_t sp_bg_color);
 uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		       struct font *font, uint16_t fg_color,
 		       uint16_t bg_color);

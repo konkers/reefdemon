@@ -254,6 +254,56 @@ void lcd_draw_bitmap4(uint8_t x, uint8_t y, struct bitmap4 *bm)
 	}
 }
 
+void lcd_draw_graph(uint8_t x, uint8_t y, uint8_t h,
+		    int32_t *data, uint8_t len, uint8_t idx,
+		    int32_t scale_low, int32_t scale_high,
+		    int32_t set_point,
+		    uint16_t fg_color, uint16_t bg_color,
+		    uint16_t sp_fg_color, uint16_t sp_bg_color)
+{
+	int32_t inc = (scale_high - scale_low) / (h - 1);
+	int32_t val = scale_high;
+	int r, c;
+	uint8_t d;
+
+	bg_color = ~bg_color;
+	fg_color = ~fg_color;
+	sp_fg_color = ~sp_fg_color;
+	sp_bg_color = ~sp_bg_color;
+
+	lcd_set_aperature(x, y, len, h);
+
+	epson_cmd(RAMWR);
+	phillips_cmd(RAMWRP);
+
+	for (r = 0; r < h; r++) {
+		d = idx;
+		for (c = 0; c < len; c += 2) {
+			uint16_t c1, c2;
+
+			c1 = data[idx] > val ? fg_color : bg_color;
+			idx++;
+			if (idx == len)
+				idx = 0;
+			c2 = data[idx] > val ? fg_color : bg_color;
+			idx++;
+			if (idx == len)
+				idx = 0;
+
+			if (val > set_point && (val - inc) < set_point ) {
+				c1 = c1 == fg_color ? sp_fg_color : sp_bg_color;
+				c2 = c2 == fg_color ? sp_fg_color : sp_bg_color;
+			}
+
+			lcd_data((c1 >> 4) & 0xFF);
+			lcd_data(((c1 & 0xF) << 4) | ((c2 >> 8) & 0xF));
+			lcd_data(c2 & 0xFF);
+		}
+		val -= inc;
+	}
+
+}
+
 uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		   struct font *font, uint16_t fg_color,
 		   uint16_t bg_color)
