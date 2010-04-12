@@ -397,6 +397,18 @@ uint8_t lcd_print_hex(uint8_t x, uint8_t y, uint8_t data,
 	return w;
 }
 
+uint8_t lcd_print_hex16(uint8_t x, uint8_t y, uint16_t data,
+			struct font *font, uint16_t fg_color,
+			uint16_t bg_color)
+{
+	uint8_t w = 0;
+
+	w += lcd_print_hex(x + w, y, data >> 8, font, fg_color, bg_color);
+	w += lcd_print_hex(x + w, y, data & 0xff, font, fg_color, bg_color);
+
+	return w;
+}
+
 uint8_t lcd_print_dec(uint8_t x, uint8_t y, uint8_t data,
 		  struct font *font, uint16_t fg_color,
 		  uint16_t bg_color)
