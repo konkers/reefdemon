@@ -203,6 +203,14 @@ void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color)
 	}
 }
 
+void lcd_draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color)
+{
+	lcd_fill(x, y, w, 1, color);
+	lcd_fill(x, y, 1, h, color);
+	lcd_fill(x, y + h - 1, w, 1, color);
+	lcd_fill(x + w - 1, y, 1, h, color);
+}
+
 void lcd_draw_bitmap4(uint8_t x, uint8_t y, struct bitmap4 *bm)
 {
 	uint16_t colors[4];

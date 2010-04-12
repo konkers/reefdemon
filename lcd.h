@@ -21,6 +21,7 @@
 #include "bitmap.h"
 
 void lcd_fill(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
+void lcd_draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
 void lcd_draw_bitmap4(uint8_t x, uint8_t y, struct bitmap4 *bm);
 uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 		       struct font *font, uint16_t fg_color,
