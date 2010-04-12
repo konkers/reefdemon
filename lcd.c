@@ -433,48 +433,51 @@ uint8_t lcd_print_dec(uint8_t x, uint8_t y, uint8_t data,
 	return w;
 }
 
-
-static prog_char fract[] = {
-	'0', '0', '0', '0',
-	'0', '6', '2', '5',
-	'1', '2', '5', '0',
-	'1', '8', '7', '5',
-	'2', '5', '0', '0',
-	'3', '1', '2', '5',
-	'3', '7', '5', '0',
-	'4', '3', '7', '5',
-	'5', '0', '0', '0',
-	'5', '6', '2', '5',
-	'6', '2', '5', '0',
-	'6', '8', '7', '5',
-	'7', '5', '0', '0',
-	'8', '1', '2', '5',
-	'8', '7', '5', '0',
-	'9', '3', '7', '5',
-};
-
-uint8_t lcd_print_temp(uint8_t x, uint8_t y, uint16_t temp,
-		       struct font *font, uint16_t fg_color,
-		       uint16_t bg_color)
+uint8_t lcd_print_fixed(uint8_t x, uint8_t y, int32_t val, uint8_t digits,
+			struct font *font, uint16_t fg_color,
+			uint16_t bg_color)
 {
 	int8_t n;
 	uint8_t w = 0;
+	int mult;
 
-	n = temp >> 4;
+	n = val >> 8;
 
 	if (n < 0) {
 		w += lcd_print_char(x + w, y, '-', font, fg_color, bg_color);
 		n = -n;
 	}
+
+	val &= 0xff;
+
+	switch(digits) {
+	case 1:
+		mult = 10;
+		break;
+
+	case 2:
+		mult = 100;
+		break;
+
+	default:
+		mult = 1000;
+		digits = 3;
+		break;
+	}
+
+	val = (val * mult + 128) / 256;;
+	if (val == mult)
+		n++;
+
 	w += lcd_print_dec(x, y, n, font, fg_color, bg_color);
 	w += lcd_print_char(x + w, y, '.', font, fg_color, bg_color);
 
-	for (n = 0; n < 4; n++) {
-		char c;
-		c = pgm_read_byte(fract + (temp & 0xf) * 4 + n);
-
-		w += lcd_print_char(x + w, y, c, font, fg_color, bg_color);
+	while (digits--) {
+		mult /= 10;
+		w += lcd_print_char(x + w, y, '0' + (val / mult) % 10,
+				    font, fg_color, bg_color);
 	}
+
 	return w;
 }
 

@@ -45,9 +45,9 @@ uint8_t lcd_print_hex16(uint8_t x, uint8_t y, uint16_t data,
 uint8_t lcd_print_dec(uint8_t x, uint8_t y, uint8_t data,
 		      struct font *font, uint16_t fg_color,
 		      uint16_t bg_color);
-uint8_t lcd_print_temp(uint8_t x, uint8_t y, uint16_t temp,
-		   struct font *font, uint16_t fg_color,
-		   uint16_t bg_color);
+uint8_t lcd_print_fixed(uint8_t x, uint8_t y, int32_t val, uint8_t digits,
+			struct font *font, uint16_t fg_color,
+			uint16_t bg_color);
 void lcd_init(void);
 
 #endif /* __lcd_h__ */
