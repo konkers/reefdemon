@@ -359,6 +359,23 @@ uint8_t lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
 	return w;
 }
 
+uint8_t lcd_string_width_P(PGM_P str, struct font *font)
+{
+	struct font_glyph glyph;
+	char c;
+	uint8_t w = 0;
+
+	while ((c = pgm_read_byte(str++))) {
+		if (c < font->min_char || c > font->max_char)
+			continue;
+
+		memcpy_P(&glyph, font->info + c - font->min_char, sizeof(glyph));
+		w += glyph.w + 1;
+	}
+	return w;
+}
+
+
 static prog_uint8_t digits[] = {'0', '1', '2', '3',
 				'4', '5', '6', '7',
 				'8', '9', 'A', 'B',

@@ -35,6 +35,7 @@ uint8_t lcd_print_char(uint8_t x, uint8_t y, char c,
 uint8_t lcd_print_string_P(uint8_t x, uint8_t y, PGM_P str,
 			   struct font *font, uint16_t fg_color,
 			   uint16_t bg_color);
+uint8_t lcd_string_width_P(PGM_P str, struct font *font);
 uint8_t lcd_print_hex(uint8_t x, uint8_t y, uint8_t data,
 		      struct font *font, uint16_t fg_color,
 		      uint16_t bg_color);
