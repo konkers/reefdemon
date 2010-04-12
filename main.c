@@ -21,6 +21,10 @@
 #include "ow.h"
 #include "ds18b20.h"
 
+#include "state.h"
+#include "ui.h"
+#include "util.h"
+
 #include "pins.h"
 
 volatile uint8_t alert;
@@ -91,9 +95,47 @@ void relay_end(void)
 {
 }
 
+#define AVCC	(_BV(REFS0))
+
+prog_uint8_t adc_channels[ADC_NUM_CHANNELS] = {
+	AVCC | 0,
+	AVCC | 1,
+	AVCC | 6,
+};
+
+uint16_t adc_data[ADC_NUM_CHANNELS];
+
+uint8_t adc_channel;
+
+void adc_sample(void)
+{
+	ADMUX = pgm_read_byte(adc_channels + adc_channel);
+
+	ADCSRA = _BV(ADEN) | _BV(ADSC) | _BV(ADIE) |
+		_BV(ADPS2) | _BV(ADPS1) |_BV(ADPS0);
+}
+
+
+ISR(ADC_vect)
+{
+	adc_data[adc_channel] = ADCW;
+
+	adc_channel++;
+	if (adc_channel == ADC_NUM_CHANNELS)
+		adc_channel = 0;
+
+	adc_sample();
+}
+
+
+uint32_t ph;
+int32_t set_point;
+int32_t temp_history[120];
+uint8_t temp_history_idx;
 
 int main(void)
 {
+	uint8_t last_min = 0;
 	cli();
 
 	DDRC = _BV(C_SCL);
@@ -136,41 +178,32 @@ int main(void)
 
 	lcd_init();
 	lcd_fill(0, 0, 131, 131, 0x000);
-	lcd_print_string_P(10, 110, PSTR("konkers"), 
-			   &font_pc8x8, 0x000, 0xfff);
 
 	ow_init();
 	ds18b20_init();
+	adc_sample();
+
+	set_point = 25 << 8;
 
 	while (1) {
-		uint8_t i, n, w;
+		ds18b20_ping();
 
-		n = ds18b20_ping();
-
-		if (n) {
-			for (i = 0; i < n; i++ ) {
-				w = lcd_print_temp(10, 10 + 10 * i,
-						   ds18b20_temps[i],
-						   &font_pc8x8,
-						   0xfff, 0x000);
-				lcd_fill(10 + w, 10 + 10 * i,
-					 50 - w, font_pc8x8.h, 0x000);
-			}
+		if (last_min != time[1]) {
+			temp_history[temp_history_idx] = ds18b20_temps[1];
+			temp_history_idx++;
+			if (temp_history_idx == ARRAY_SIZE(temp_history))
+				temp_history_idx = 0;
+			last_min = time[1];
 		}
 
-		w = lcd_print_hex(10, 50, time[2],
-				  &font_pc8x8,0xfff, 0x000);
-		w += lcd_print_char(10 + w, 50, ':',
-				    &font_pc8x8,0xfff, 0x000);
-		w += lcd_print_hex(10 + w, 50, time[1],
-				   &font_pc8x8,0xfff, 0x000);
-		w += lcd_print_char(10 + w, 50, ':',
-				    &font_pc8x8,0xfff, 0x000);
-		w += lcd_print_hex(10 + w, 50, time[0],
-				   &font_pc8x8,0xfff, 0x000);
+		if (ph == 0) {
+			ph = (uint32_t)adc_data[2] << PH_IIR_SHIFT;
+		} else {
+			ph -= ph >> PH_IIR_SHIFT;
+			ph += adc_data[2];
+		}
 
-		lcd_draw_bitmap4(10, 60, &rd_logo);
-
+		ui();
 
 		if (alert)
 			PORTD |= _BV(D_ALERT);
@@ -178,9 +211,9 @@ int main(void)
 			PORTD &= ~_BV(D_ALERT);
 
 		cli();
-		if (ds18b20_temps[1] < (25 << 4))
+		if (ds18b20_temps[1] < set_point)
 			relays &= ~0x1;
-		else if(ds18b20_temps[1] > ((25 << 4) + (1 << 3)))
+		else if(ds18b20_temps[1] > (set_point + (1 << 4)))
 			relays |= 0x1;
 		sei();
 	}
