@@ -457,7 +457,7 @@ void lcd_init(void)
 	epson_data(0x03);
 
 	phillips_cmd(SETCON);
-	phillips_data(0x30);
+	phillips_data(0x3c);
 
 	epson_cmd(NOP);
 	epson_cmd(NOPP);
